@@ -1,7 +1,6 @@
 package ru.netology.nmedia.repository
 
 import androidx.lifecycle.*
-import kotlinx.coroutines.delay
 import okio.IOException
 import ru.netology.nmedia.api.*
 import ru.netology.nmedia.dao.PostDao
@@ -31,13 +30,15 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     }
 
     override suspend fun save(post: Post) {
+        val newPost = post.copy(id = -1)
+        dao.insert(PostEntity.fromDto(newPost, localPost = true))
         try {
             val response = PostsApi.service.save(post)
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
             val body = response.body() ?: throw ApiError(response.code(), response.message())
-            dao.insert(PostEntity.fromDto(body))
+            dao.insert(PostEntity.fromDto(newPost.copy(id = body.id), localPost = false))
         } catch (e: IOException) {
             throw NetworkError
         } catch (e: Exception) {
@@ -53,10 +54,11 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
-            dao.removeById(id)
         } catch (e: IOException) {
+            dao.insert(PostEntity.fromDto(oldPost, localPost = false))
             throw NetworkError
         } catch (e: Exception) {
+            dao.insert(PostEntity.fromDto(oldPost, localPost = false))
             throw UnknownError
         }
     }
@@ -64,7 +66,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     override suspend fun likeById(id: Long) {
         val oldPost = data.value?.find { it.id == id } ?: return
         val newPost = oldPost.copy(likedByMe = true, likes = +1)
-        dao.insert(PostEntity.fromDto(newPost))
+        dao.insert(PostEntity.fromDto(newPost,localPost = false))
         try {
             val response = PostsApi.service.likeById(id)
             if (!response.isSuccessful) {
@@ -72,7 +74,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             }
             val body =
                 response.body() ?: throw ApiError(response.code(), response.message())
-            dao.insert(PostEntity.fromDto(body))
+            dao.insert(PostEntity.fromDto(body, localPost = false))
         } catch (e: IOException) {
             throw NetworkError
         } catch (e: Exception) {
@@ -83,7 +85,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     override suspend fun dislikeById(id: Long) {
         val oldPost = data.value?.find { it.id == id } ?: return
         val newPost = oldPost.copy(likedByMe = false, likes = 0)
-        dao.insert(PostEntity.fromDto(newPost))
+        dao.insert(PostEntity.fromDto(newPost, localPost = false))
         try {
             val response = PostsApi.service.dislikeById(id)
             if (!response.isSuccessful) {
@@ -91,7 +93,7 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             }
             val body =
                 response.body() ?: throw ApiError(response.code(), response.message())
-            dao.insert(PostEntity.fromDto(body))
+            dao.insert(PostEntity.fromDto(body, localPost = false))
         } catch (e: IOException) {
             throw NetworkError
         } catch (e: Exception) {

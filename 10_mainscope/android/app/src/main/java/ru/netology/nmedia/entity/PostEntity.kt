@@ -14,15 +14,25 @@ data class PostEntity(
     val published: Long,
     val likedByMe: Boolean,
     val likes: Int = 0,
+    val localPost: Boolean
 ) {
-    fun toDto() = Post(id, author, authorAvatar, content, published, likedByMe, likes)
+    fun toDto() = Post(id, author, authorAvatar, content, published, likedByMe, likes, localPost)
 
     companion object {
-        fun fromDto(dto: Post) =
-            PostEntity(dto.id, dto.author, dto.authorAvatar, dto.content, dto.published, dto.likedByMe, dto.likes)
+        fun fromDto(dto: Post, localPost: Boolean) =
+            PostEntity(
+                dto.id,
+                dto.author,
+                dto.authorAvatar,
+                dto.content,
+                dto.published,
+                dto.likedByMe,
+                dto.likes,
+                dto.localPost
+            )
 
     }
 }
 
 fun List<PostEntity>.toDto(): List<Post> = map(PostEntity::toDto)
-fun List<Post>.toEntity(): List<PostEntity> = map(PostEntity::fromDto)
+fun List<Post>.toEntity(localPost: Boolean = true ): List<PostEntity> = map { post -> PostEntity.fromDto(post,localPost) }

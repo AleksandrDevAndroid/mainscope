@@ -103,6 +103,13 @@
             tools:text="@sample/posts.json/data/likes"
             style="@style/Widget.AppTheme.LikeCheckBox"
             />
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/inactive_post"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="visible"
+            app:constraint_referenced_ids="like,share"
+            />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/share"

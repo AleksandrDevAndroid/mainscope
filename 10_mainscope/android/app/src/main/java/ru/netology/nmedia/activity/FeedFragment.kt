@@ -66,6 +66,9 @@ class FeedFragment : Fragment() {
         viewModel.data.observe(viewLifecycleOwner) { state ->
             adapter.submitList(state.posts)
             binding.emptyText.isVisible = state.empty
+            binding.list.post {
+                binding.list.smoothScrollToPosition(0)
+            }
         }
 
         binding.swiperefresh.setOnRefreshListener {
